@@ -15,19 +15,12 @@ body{
   color:#fff;
   text-align:center;
 }
-
 .container{
   max-width:420px;
   margin:auto;
   padding:15px;
 }
-
-h1{
-  color:#00ffcc;
-  font-size:22px;
-  margin:10px 0;
-}
-
+h1{color:#00ffcc;font-size:22px;margin:10px 0;}
 p{font-size:14px;color:#ccc;}
 
 .pointer{
@@ -43,9 +36,7 @@ p{font-size:14px;color:#ccc;}
   max-width:280px;
   aspect-ratio:1/1;
   margin:10px auto;
-  position:relative;
 }
-
 #wheel{
   width:100%;
   height:100%;
@@ -66,50 +57,40 @@ button{
   color:#000;
   font-weight:bold;
 }
+button:disabled{background:#444;color:#aaa;}
 
-button:disabled{
-  background:#444;
-  color:#aaa;
-}
-
-/* Popup */
 #popup{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,0.85);
+  background:rgba(0,0,0,.85);
   display:none;
   align-items:center;
   justify-content:center;
   z-index:10;
 }
-
-.popupContent{
+.popup{
   background:#111;
   padding:20px;
   width:90%;
   max-width:300px;
   border-radius:15px;
 }
-
 #progressBar{
   background:#333;
   border-radius:10px;
   overflow:hidden;
   margin:10px 0;
 }
-
 #progressFill{
   height:12px;
   width:0%;
   background:#00ffcc;
 }
-
 #countdown{
   font-size:22px;
   color:#00ffcc;
   margin-top:10px;
 }
-
 a.claim{
   display:block;
   margin-top:15px;
@@ -120,7 +101,6 @@ a.claim{
   border-radius:10px;
   font-weight:bold;
 }
-
 canvas.confetti{
   position:fixed;
   inset:0;
@@ -133,7 +113,7 @@ canvas.confetti{
 
 <div class="container">
   <h1>🎡 Spin & Win Free Data</h1>
-  <p>One spin per user. Mobile users only.</p>
+  <p>3 spins per day • Mobile users only</p>
 
   <div class="pointer"></div>
 
@@ -141,16 +121,15 @@ canvas.confetti{
     <canvas id="wheel"></canvas>
   </div>
 
-  <button id="spinBtn" onclick="spin()">SPIN NOW</button>
+  <button id="spinBtn" onclick="spin()">Loading…</button>
 </div>
 
-<!-- Popup -->
 <div id="popup">
-  <div class="popupContent">
+  <div class="popup">
     <h2>🎉 You Won</h2>
     <h1 id="prize"></h1>
-
     <p id="status">Validating reward…</p>
+
     <div id="progressBar">
       <div id="progressFill"></div>
     </div>
@@ -166,21 +145,39 @@ canvas.confetti{
 <audio id="winSound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_f5f94c2e36.mp3"></audio>
 
 <script>
+/* ===== CONFIG ===== */
 const prizes=["100MB","250MB","500MB","1GB","2GB","3GB","5GB","10GB"];
 const AD_LINK="https://www.effectivegatecpm.com/tmwrndpge9?key=4ddfcec174b4acd26e1c67c6d3a56117";
+const MAX_SPINS=3;
+const RESET_TIME=24*60*60*1000;
 
-const canvas=document.getElementById("wheel");
-const ctx=canvas.getContext("2d");
+/* ===== STATE ===== */
+let spinsLeft, lastSpin, adClicked=false;
 const spinBtn=document.getElementById("spinBtn");
 
-function resizeCanvas(){
-  const size=canvas.parentElement.offsetWidth;
-  canvas.width=size;
-  canvas.height=size;
+/* ===== INIT ===== */
+const now=Date.now();
+lastSpin=localStorage.getItem("lastSpinTime");
+
+if(!lastSpin || now-lastSpin>RESET_TIME){
+  spinsLeft=MAX_SPINS;
+  localStorage.setItem("spinsLeft",spinsLeft);
+  localStorage.setItem("lastSpinTime",now);
+}else{
+  spinsLeft=parseInt(localStorage.getItem("spinsLeft")||MAX_SPINS);
+}
+updateButton();
+
+/* ===== WHEEL DRAW ===== */
+const canvas=document.getElementById("wheel");
+const ctx=canvas.getContext("2d");
+
+function resize(){
+  const s=canvas.parentElement.offsetWidth;
+  canvas.width=s;canvas.height=s;
   drawWheel();
 }
-window.addEventListener("resize",resizeCanvas);
-resizeCanvas();
+window.addEventListener("resize",resize);resize();
 
 function drawWheel(){
   const arc=Math.PI*2/prizes.length;
@@ -190,10 +187,8 @@ function drawWheel(){
     ctx.beginPath();
     ctx.fillStyle=colors[i%4];
     ctx.moveTo(canvas.width/2,canvas.height/2);
-    ctx.arc(canvas.width/2,canvas.height/2,canvas.width/2,
-      arc*i,arc*(i+1));
+    ctx.arc(canvas.width/2,canvas.height/2,canvas.width/2,arc*i,arc*(i+1));
     ctx.fill();
-
     ctx.save();
     ctx.translate(canvas.width/2,canvas.height/2);
     ctx.rotate(arc*i+arc/2);
@@ -204,43 +199,49 @@ function drawWheel(){
   }
 }
 
+/* ===== SPIN LOGIC ===== */
 let angle=0;
 
-if(localStorage.getItem("spun")){
-  spinBtn.disabled=true;
-  spinBtn.innerText="Spin Used";
+function updateButton(){
+  if(spinsLeft<=0){
+    spinBtn.disabled=true;
+    spinBtn.innerText="No Spins Left";
+  }else{
+    spinBtn.disabled=false;
+    spinBtn.innerText=`SPIN NOW (${spinsLeft} left)`;
+  }
 }
 
 function spin(){
-  if(localStorage.getItem("spun"))return;
-  localStorage.setItem("spun","yes");
-  spinBtn.disabled=true;
+  if(spinsLeft<=0)return;
+  spinsLeft--;
+  localStorage.setItem("spinsLeft",spinsLeft);
+  localStorage.setItem("lastSpinTime",Date.now());
+  updateButton();
 
   document.getElementById("spinSound").play();
   angle+=360*5+Math.random()*360;
   canvas.style.transform=`rotate(${angle}deg)`;
-
   setTimeout(showResult,4000);
 }
 
 function showResult(){
   document.getElementById("winSound").play();
   const index=Math.floor(((angle%360)/360)*prizes.length);
-  const win=prizes[prizes.length-1-index];
-  document.getElementById("prize").innerText=win;
+  document.getElementById("prize").innerText=prizes[prizes.length-1-index];
   document.getElementById("popup").style.display="flex";
   document.getElementById("claimBtn").href=AD_LINK;
+  adClicked=false;
   startProgress();
 }
 
+/* ===== FAKE PROGRESS ===== */
 function startProgress(){
   let p=0;
   const fill=document.getElementById("progressFill");
   const status=document.getElementById("status");
-
   const t=setInterval(()=>{
-    p++;
-    fill.style.width=p+"%";
+    p++;fill.style.width=p+"%";
     if(p==40)status.innerText="Checking availability…";
     if(p==70)status.innerText="Finalizing reward…";
     if(p>=100){
@@ -251,13 +252,22 @@ function startProgress(){
   },40);
 }
 
+/* ===== FORCE AD CLICK ===== */
+document.getElementById("claimBtn").addEventListener("click",()=>{
+  adClicked=true;
+  setTimeout(()=>{
+    document.getElementById("popup").style.display="none";
+    updateButton();
+  },3000);
+});
+
+/* ===== COUNTDOWN ===== */
 function startCountdown(){
   let c=5;
   const cd=document.getElementById("countdown");
   cd.innerText="Redirecting in "+c;
   const t=setInterval(()=>{
-    c--;
-    cd.innerText="Redirecting in "+c;
+    c--;cd.innerText="Redirecting in "+c;
     if(c<=0){
       clearInterval(t);
       location.href=AD_LINK;
@@ -265,6 +275,7 @@ function startCountdown(){
   },1000);
 }
 
+/* ===== CONFETTI ===== */
 function confetti(){
   const c=document.getElementById("confetti");
   const x=c.getContext("2d");
@@ -272,15 +283,12 @@ function confetti(){
   let p=[];
   for(let i=0;i<120;i++)
     p.push({x:Math.random()*c.width,y:Math.random()*c.height,r:3+Math.random()*4,s:2+Math.random()*3,c:`hsl(${Math.random()*360},100%,50%)`});
-
   (function a(){
     x.clearRect(0,0,c.width,c.height);
     p.forEach(e=>{
       e.y+=e.s;if(e.y>c.height)e.y=0;
-      x.fillStyle=e.c;
-      x.beginPath();
-      x.arc(e.x,e.y,e.r,0,Math.PI*2);
-      x.fill();
+      x.fillStyle=e.c;x.beginPath();
+      x.arc(e.x,e.y,e.r,0,Math.PI*2);x.fill();
     });
     requestAnimationFrame(a);
   })();
