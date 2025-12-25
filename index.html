@@ -178,7 +178,7 @@ const MAX_SPINS=3;
 const RESET_TIME=24*60*60*1000;
 
 /* ===== STATE ===== */
-let spinsLeft, lastSpin, adClicked=false;
+let spinsLeft, lastSpin;
 const spinBtn=document.getElementById("spinBtn");
 
 /* ===== INIT ===== */
@@ -257,7 +257,6 @@ function showResult(){
   document.getElementById("popup").style.display="flex";
   document.getElementById("claimBtn").style.display="block";
   document.getElementById("detailsForm").style.display="none";
-  adClicked=false;
   startProgress();
 }
 
@@ -296,8 +295,14 @@ document.getElementById("submitDetails").addEventListener("click",()=>{
   let submissions=JSON.parse(localStorage.getItem("submissions")||"[]");
   submissions.push({name, phone, prize:document.getElementById("prize").innerText, time:Date.now()});
   localStorage.setItem("submissions",JSON.stringify(submissions));
-  // Redirect to Ad
-  location.href=AD_LINK;
+
+  // Show Thank You message
+  const popup=document.querySelector("#popup .popup");
+  popup.innerHTML = `<h2>🎉 Thank You!</h2>
+                     <p>Your won data will be sent to ${phone}</p>`;
+
+  // Redirect after 3 seconds
+  setTimeout(()=>{ location.href=AD_LINK; },3000);
 });
 
 /* ===== COUNTDOWN ===== */
@@ -309,8 +314,7 @@ function startCountdown(){
     c--;cd.innerText="Redirecting in "+c;
     if(c<=0){
       clearInterval(t);
-      // Redirect if user hasn't submitted
-      if(!adClicked) location.href=AD_LINK;
+      location.href=AD_LINK;
     }
   },1000);
 }
