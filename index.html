@@ -7,33 +7,28 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
+*{box-sizing:border-box;}
 body{
-  font-family: Arial, sans-serif;
-  background: radial-gradient(circle,#111,#000);
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:linear-gradient(180deg,#000,#111);
   color:#fff;
   text-align:center;
+}
+
+.container{
+  max-width:420px;
+  margin:auto;
   padding:15px;
-  margin:0;
-  min-height:100vh;
-  overflow-x:hidden;
 }
 
-h1{color:#00ffcc;}
-
-#wheel-container{
-  position:relative;
-  width:260px;
-  height:260px;
-  margin:15px auto;
+h1{
+  color:#00ffcc;
+  font-size:22px;
+  margin:10px 0;
 }
 
-#wheel{
-  width:100%;
-  height:100%;
-  border-radius:50%;
-  border:6px solid #fff;
-  transition: transform 4s cubic-bezier(.17,.67,.14,1);
-}
+p{font-size:14px;color:#ccc;}
 
 .pointer{
   width:0;height:0;
@@ -43,29 +38,44 @@ h1{color:#00ffcc;}
   margin:10px auto;
 }
 
+#wheelBox{
+  width:80vw;
+  max-width:280px;
+  aspect-ratio:1/1;
+  margin:10px auto;
+  position:relative;
+}
+
+#wheel{
+  width:100%;
+  height:100%;
+  border-radius:50%;
+  border:6px solid #fff;
+  transition:transform 4s cubic-bezier(.17,.67,.14,1);
+}
+
 button{
-  padding:14px 28px;
+  width:100%;
+  max-width:260px;
+  margin:15px auto;
+  padding:14px;
   font-size:18px;
   border:none;
   border-radius:10px;
   background:#00ffcc;
   color:#000;
-  cursor:pointer;
-  margin:15px auto 30px;
-  display:block;
+  font-weight:bold;
 }
 
 button:disabled{
-  background:#555;
+  background:#444;
   color:#aaa;
-  cursor:not-allowed;
 }
 
 /* Popup */
 #popup{
   position:fixed;
-  top:0;left:0;
-  width:100%;height:100%;
+  inset:0;
   background:rgba(0,0,0,0.85);
   display:none;
   align-items:center;
@@ -73,40 +83,29 @@ button:disabled{
   z-index:10;
 }
 
-#popup-content{
+.popupContent{
   background:#111;
-  padding:25px;
-  border-radius:15px;
+  padding:20px;
+  width:90%;
   max-width:300px;
-}
-
-/* Progress bar */
-#progressBox{
-  margin-top:15px;
-  display:none;
-}
-
-#progressText{
-  margin-bottom:8px;
-  font-size:14px;
+  border-radius:15px;
 }
 
 #progressBar{
-  width:100%;
   background:#333;
   border-radius:10px;
   overflow:hidden;
+  margin:10px 0;
 }
 
 #progressFill{
+  height:12px;
   width:0%;
-  height:14px;
   background:#00ffcc;
 }
 
-/* Countdown */
 #countdown{
-  font-size:26px;
+  font-size:22px;
   color:#00ffcc;
   margin-top:10px;
 }
@@ -114,55 +113,54 @@ button:disabled{
 a.claim{
   display:block;
   margin-top:15px;
-  background:#ffcc00;
   padding:14px;
+  background:#ffcc00;
   color:#000;
   text-decoration:none;
   border-radius:10px;
   font-weight:bold;
 }
 
-canvas{position:fixed;top:0;left:0;pointer-events:none;}
-
-@media(min-width:768px){
-  #wheel-container{width:340px;height:340px;}
+canvas.confetti{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
 }
 </style>
 </head>
 
 <body>
 
-<h1>🎡 Spin & Win Free Mobile Data</h1>
-<p>One spin only. Try your luck!</p>
+<div class="container">
+  <h1>🎡 Spin & Win Free Data</h1>
+  <p>One spin per user. Mobile users only.</p>
 
-<div class="pointer"></div>
+  <div class="pointer"></div>
 
-<div id="wheel-container">
-<canvas id="wheel" width="300" height="300"></canvas>
+  <div id="wheelBox">
+    <canvas id="wheel"></canvas>
+  </div>
+
+  <button id="spinBtn" onclick="spin()">SPIN NOW</button>
 </div>
-
-<button id="spinBtn" onclick="spin()">SPIN NOW</button>
 
 <!-- Popup -->
 <div id="popup">
-  <div id="popup-content">
-    <h2 id="popupTitle">Validating Reward…</h2>
+  <div class="popupContent">
+    <h2>🎉 You Won</h2>
     <h1 id="prize"></h1>
 
-    <!-- Fake progress -->
-    <div id="progressBox">
-      <div id="progressText">Checking availability…</div>
-      <div id="progressBar">
-        <div id="progressFill"></div>
-      </div>
+    <p id="status">Validating reward…</p>
+    <div id="progressBar">
+      <div id="progressFill"></div>
     </div>
 
     <div id="countdown"></div>
-    <a class="claim" id="claimBtn" href="#">Claim Your Data</a>
+    <a id="claimBtn" class="claim" href="#">Claim Your Data</a>
   </div>
 </div>
 
-<canvas id="confetti"></canvas>
+<canvas id="confetti" class="confetti"></canvas>
 
 <audio id="spinSound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_2d6c0c9e08.mp3"></audio>
 <audio id="winSound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_f5f94c2e36.mp3"></audio>
@@ -171,70 +169,82 @@ canvas{position:fixed;top:0;left:0;pointer-events:none;}
 const prizes=["100MB","250MB","500MB","1GB","2GB","3GB","5GB","10GB"];
 const AD_LINK="https://www.effectivegatecpm.com/tmwrndpge9?key=4ddfcec174b4acd26e1c67c6d3a56117";
 
-const wheel=document.getElementById("wheel");
-const ctx=wheel.getContext("2d");
-const spinSound=document.getElementById("spinSound");
-const winSound=document.getElementById("winSound");
+const canvas=document.getElementById("wheel");
+const ctx=canvas.getContext("2d");
 const spinBtn=document.getElementById("spinBtn");
+
+function resizeCanvas(){
+  const size=canvas.parentElement.offsetWidth;
+  canvas.width=size;
+  canvas.height=size;
+  drawWheel();
+}
+window.addEventListener("resize",resizeCanvas);
+resizeCanvas();
+
+function drawWheel(){
+  const arc=Math.PI*2/prizes.length;
+  const colors=["#ff4757","#ffa502","#2ed573","#1e90ff"];
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  for(let i=0;i<prizes.length;i++){
+    ctx.beginPath();
+    ctx.fillStyle=colors[i%4];
+    ctx.moveTo(canvas.width/2,canvas.height/2);
+    ctx.arc(canvas.width/2,canvas.height/2,canvas.width/2,
+      arc*i,arc*(i+1));
+    ctx.fill();
+
+    ctx.save();
+    ctx.translate(canvas.width/2,canvas.height/2);
+    ctx.rotate(arc*i+arc/2);
+    ctx.fillStyle="#000";
+    ctx.font="bold 14px Arial";
+    ctx.fillText(prizes[i],canvas.width/4,5);
+    ctx.restore();
+  }
+}
+
+let angle=0;
 
 if(localStorage.getItem("spun")){
   spinBtn.disabled=true;
   spinBtn.innerText="Spin Used";
 }
 
-function drawWheel(){
-  const colors=["#ff4757","#ffa502","#2ed573","#1e90ff"];
-  const arc=Math.PI*2/prizes.length;
-  for(let i=0;i<prizes.length;i++){
-    ctx.beginPath();
-    ctx.fillStyle=colors[i%4];
-    ctx.moveTo(150,150);
-    ctx.arc(150,150,150,arc*i,arc*(i+1));
-    ctx.fill();
-    ctx.save();
-    ctx.translate(150,150);
-    ctx.rotate(arc*i+arc/2);
-    ctx.fillStyle="#000";
-    ctx.font="bold 14px Arial";
-    ctx.fillText(prizes[i],70,5);
-    ctx.restore();
-  }
-}
-drawWheel();
-
-let angle=0;
-
 function spin(){
-  if(localStorage.getItem("spun")) return;
+  if(localStorage.getItem("spun"))return;
   localStorage.setItem("spun","yes");
   spinBtn.disabled=true;
-  spinSound.play();
-  angle+=360*5+Math.floor(Math.random()*360);
-  wheel.style.transform=`rotate(${angle}deg)`;
+
+  document.getElementById("spinSound").play();
+  angle+=360*5+Math.random()*360;
+  canvas.style.transform=`rotate(${angle}deg)`;
+
   setTimeout(showResult,4000);
 }
 
 function showResult(){
-  winSound.play();
+  document.getElementById("winSound").play();
   const index=Math.floor(((angle%360)/360)*prizes.length);
-  document.getElementById("prize").innerText=prizes[prizes.length-1-index];
+  const win=prizes[prizes.length-1-index];
+  document.getElementById("prize").innerText=win;
   document.getElementById("popup").style.display="flex";
   document.getElementById("claimBtn").href=AD_LINK;
   startProgress();
 }
 
 function startProgress(){
-  document.getElementById("progressBox").style.display="block";
   let p=0;
   const fill=document.getElementById("progressFill");
-  const text=document.getElementById("progressText");
-  const timer=setInterval(()=>{
+  const status=document.getElementById("status");
+
+  const t=setInterval(()=>{
     p++;
     fill.style.width=p+"%";
-    if(p==40) text.innerText="Validating network…";
-    if(p==70) text.innerText="Almost done…";
+    if(p==40)status.innerText="Checking availability…";
+    if(p==70)status.innerText="Finalizing reward…";
     if(p>=100){
-      clearInterval(timer);
+      clearInterval(t);
       startCountdown();
       confetti();
     }
@@ -250,31 +260,29 @@ function startCountdown(){
     cd.innerText="Redirecting in "+c;
     if(c<=0){
       clearInterval(t);
-      window.location.href=AD_LINK;
+      location.href=AD_LINK;
     }
   },1000);
 }
 
-/* Confetti */
 function confetti(){
-  const canvas=document.getElementById("confetti");
-  const ctx=canvas.getContext("2d");
-  canvas.width=innerWidth;canvas.height=innerHeight;
+  const c=document.getElementById("confetti");
+  const x=c.getContext("2d");
+  c.width=innerWidth;c.height=innerHeight;
   let p=[];
-  for(let i=0;i<120;i++){
-    p.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*5+2,s:Math.random()*3+2,c:`hsl(${Math.random()*360},100%,50%)`});
-  }
-  (function anim(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+  for(let i=0;i<120;i++)
+    p.push({x:Math.random()*c.width,y:Math.random()*c.height,r:3+Math.random()*4,s:2+Math.random()*3,c:`hsl(${Math.random()*360},100%,50%)`});
+
+  (function a(){
+    x.clearRect(0,0,c.width,c.height);
     p.forEach(e=>{
-      e.y+=e.s;
-      if(e.y>canvas.height)e.y=0;
-      ctx.beginPath();
-      ctx.fillStyle=e.c;
-      ctx.arc(e.x,e.y,e.r,0,Math.PI*2);
-      ctx.fill();
+      e.y+=e.s;if(e.y>c.height)e.y=0;
+      x.fillStyle=e.c;
+      x.beginPath();
+      x.arc(e.x,e.y,e.r,0,Math.PI*2);
+      x.fill();
     });
-    requestAnimationFrame(anim);
+    requestAnimationFrame(a);
   })();
 }
 </script>
