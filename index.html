@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -119,6 +118,16 @@ a.claim{
   border-radius:8px;
   margin-top:5px;
 }
+a#anotherChanceBtn{
+  display:block;
+  margin-top:15px;
+  padding:12px;
+  background:#00ffcc;
+  color:#000;
+  text-decoration:none;
+  border-radius:8px;
+  font-weight:bold;
+}
 canvas.confetti{
   position:fixed;
   inset:0;
@@ -163,6 +172,15 @@ canvas.confetti{
       <button id="submitDetails">Submit</button>
     </div>
   </div>
+</div>
+
+<!-- Hidden Thank You template -->
+<div id="thankYouContent" style="display:none;">
+  <h2>🎉 Thank You!</h2>
+  <p>Your won data will be sent to <span id="userPhoneText"></span></p>
+  <a id="anotherChanceBtn" href="https://www.effectivegatecpm.com/tmwrndpge9?key=4ddfcec174b4acd26e1c67c6d3a56117" target="_blank">
+     Get Another Chance
+  </a>
 </div>
 
 <canvas id="confetti" class="confetti"></canvas>
@@ -291,17 +309,18 @@ document.getElementById("submitDetails").addEventListener("click",()=>{
     alert("Please enter name and phone!");
     return;
   }
+
   // Save locally
   let submissions=JSON.parse(localStorage.getItem("submissions")||"[]");
   submissions.push({name, phone, prize:document.getElementById("prize").innerText, time:Date.now()});
   localStorage.setItem("submissions",JSON.stringify(submissions));
 
-  // Show Thank You message
+  // Show Thank You + Get Another Chance button
   const popup=document.querySelector("#popup .popup");
-  popup.innerHTML = `<h2>🎉 Thank You!</h2>
-                     <p>Your won data will be sent to ${phone}</p>`;
+  popup.innerHTML = document.getElementById("thankYouContent").innerHTML;
+  document.getElementById("userPhoneText").innerText = phone;
 
-  // Redirect after 3 seconds
+  // Optional: redirect to Ad after 3 sec
   setTimeout(()=>{ location.href=AD_LINK; },3000);
 });
 
